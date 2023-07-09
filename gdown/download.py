@@ -17,6 +17,7 @@ import tqdm
 from ._indent import indent
 from .exceptions import FileURLRetrievalError
 from .parse_url import parse_url
+from .webdriver_utils import selenium_get_url_confirmation, INITIALIZED
 
 CHUNK_SIZE = 512 * 1024  # 512KB
 home = osp.expanduser("~")
@@ -142,6 +143,9 @@ def download(
     )
 
     gdrive_file_id, is_gdrive_download_link = parse_url(url, warning=not fuzzy)
+    is_source_link = False
+    filename_from_url = None
+    cookies = None
 
     if fuzzy and gdrive_file_id:
         # overwrite the url with fuzzy match of a file id
@@ -224,16 +228,35 @@ def download(
         try:
             url = get_url_from_gdrive_confirmation(res.text)
         except FileURLRetrievalError as e:
-            message = (
-                "Failed to retrieve file url:\n\n{}\n\n"
-                "You may still be able to access the file from the browser:"
-                "\n\n\t{}\n\n"
-                "but Gdown can't. Please check connections and permissions."
-            ).format(
-                indent("\n".join(textwrap.wrap(str(e))), prefix="\t"),
-                url_origin,
+            message = ("Failed to retrieve file url:\n\n{}\n\n").format(
+                indent("\n".join(textwrap.wrap(str(e))), prefix="\t")
             )
-            raise FileURLRetrievalError(message)
+            if INITIALIZED:
+                if not quiet:
+                    print(
+                        message
+                        + "Using selenium to fetch the direct source link,"
+                        " the download may be slow under this option."
+                    )
+                (
+                    cookies,
+                    url,
+                    filename_from_url,
+                ) = selenium_get_url_confirmation(url_origin, quiet)
+                sess.cookies.update(cookies)
+                is_source_link = True
+                is_gdrive_download_link = False
+                break
+            else:
+                raise FileURLRetrievalError(
+                    message
+                    + "You may still be able to access the file from the browser:"
+                    "\n\n\t{}\n\n"
+                    "but Gdown can't, and selenium isn't initialized to be used. "
+                    "Please check connections and permissions.".format(
+                        url_origin
+                    )
+                )
 
     if gdrive_file_id and is_gdrive_download_link:
         content_disposition = six.moves.urllib_parse.unquote(
@@ -242,7 +265,7 @@ def download(
         m = re.search(r"filename\*=UTF-8''(.*)", content_disposition)
         filename_from_url = m.groups()[0]
         filename_from_url = filename_from_url.replace(osp.sep, "_")
-    else:
+    elif not is_source_link:
         filename_from_url = osp.basename(url)
 
     if output is None:
@@ -289,8 +312,13 @@ def download(
         tmp_file = None
         f = output
 
+    headers = None
     if tmp_file is not None and f.tell() != 0:
         headers = {"Range": "bytes={}-".format(f.tell())}
+        if not is_source_link:  # all src link requests will be executed later
+            res = sess.get(url, headers=headers, stream=True, verify=verify)
+
+    if is_source_link:
         res = sess.get(url, headers=headers, stream=True, verify=verify)
 
     if not quiet:
