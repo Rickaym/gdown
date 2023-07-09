@@ -9,18 +9,22 @@
     <summary>✨ What does this fork add?</summary>
     <br>
     <div align="left">
-      It allows owner-only downloadable files on Google Drive to be downloaded.
-      We achieve this using the [selenium](https://pypi.org/project/selenium/) library
-      to fetch the direct source link which can be fetched publicly.
 
-      E.g.
+  It allows owner-only downloadable files on Google Drive to be downloaded.
+  We achieve this using the [selenium](https://pypi.org/project/selenium) library
+  to fetch the direct source link which can be fetched publicly.
 
-      ```py
-        url = "https://drive.google.com/file/d/1GwjoIy9EE0Efjomce14MeBZQ5h41Gm09/view?usp=sharing"
-        init_chrome_driver()  # this line is mandatory
-        download(url, fuzzy=True, quiet=False)
-      ```
-    </div>
+  Usage:
+      
+  ```python
+    ...
+    from gdown.webdriver_utils import init_chrome_driver
+
+    url = "https://drive.google.com/file/d/1GwjoIy9EE0Efjomce14MeBZQ5h41Gm09/view?usp=sharing"
+    init_chrome_driver()  # this line is mandatory
+    download(url, fuzzy=True, quiet=False)
+  ```
+  </div>
   </details>
 </div>
 <div align="center">
