@@ -22,7 +22,7 @@
 
 ## Description
 
-Download a large file from Google Drive.  
+Download a large file from Google Drive.
 If you use curl/wget, it fails with a large file because of
 the security warning from Google Drive.
 Supports downloading from Google Drive folders (max 50 files per folder).
@@ -30,13 +30,10 @@ Supports downloading from Google Drive folders (max 50 files per folder).
 
 ## Installation
 
+Note: Use this only for installing this fork.
 ```bash
-pip install gdown
-
-# to upgrade
-pip install --upgrade gdown
+pip install git+https://github.com/Rickaym/gdown.git#egg=gdown
 ```
-
 
 ## Usage
 
