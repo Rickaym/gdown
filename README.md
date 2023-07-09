@@ -1,11 +1,16 @@
 <h1 align="center">
   gdown
 </h1>
-
-<h4 align="center">
-  Download a large file from Google Drive.
-</h4>
-
+<div align="center">
+  <h4>
+    Download a large file from Google Drive.
+  </h4>
+  <details>
+    <summary>✨ What does this fork add?</summary>
+    <br>
+    Features.
+  </details>
+</div>
 <div align="center">
   <a href="https://pypi.python.org/pypi/gdown"><img src="https://img.shields.io/pypi/v/gdown.svg"></a>
   <a href="https://pypi.org/project/gdown"><img src="https://img.shields.io/pypi/pyversions/gdown.svg"></a>
