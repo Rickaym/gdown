@@ -6,26 +6,32 @@ from selenium.common.exceptions import NoSuchFrameException
 
 from urllib.parse import parse_qs
 
-INITIALIZED = False
-_DRIVER: webdriver.Chrome = None  # type: ignore
+class Config:
+    get_driver = None
 
 
 def init_chrome_driver(get_driver=lambda: webdriver.Chrome()):
-    global _DRIVER, INITIALIZED
-    INITIALIZED = True
-    _DRIVER = get_driver()
+    """
+    Initialize the chromedriver for use with gdown. This is required for
+    downloading files from Google Drive that are restricted and
+    require cookies to be set.
+    """
+    Config.get_driver = get_driver
 
 
 def selenium_get_url_confirmation(view_url, quiet):
-    # Parse the URL into components
+    """
+    Get the cookies, video source URL and filename from a Google Drive URL.
+    """
     url_args = parse_qs(view_url.split("?")[-1])
     view_url = (
         f"https://drive.google.com/file/d/{url_args['id'][0]}/view?usp=sharing"
     )
     if not quiet:
         print(f"Chromedriver fetching '{view_url}'")
-    _DRIVER.get(view_url)
-    thumbnail = WebDriverWait(_DRIVER, 60).until(
+    driver = Config.get_driver()
+    driver.get(view_url)
+    thumbnail = WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable(
             (
                 By.XPATH,
@@ -36,23 +42,23 @@ def selenium_get_url_confirmation(view_url, quiet):
 
     thumbnail.click()
 
-    filename = _DRIVER.find_element(
+    filename = driver.find_element(
         By.XPATH, "/html/body/div[3]/div[4]/div/div[1]/div[2]/div[1]"
     ).text
     filename = filename.replace("/", "_")
     if not quiet:
         print(f"Video filename found as '{filename}'")
 
-    cookies = _DRIVER.get_cookies()
+    cookies = driver.get_cookies()
 
     for _ in range(10):
-        iframe = WebDriverWait(_DRIVER, 30).until(
+        iframe = WebDriverWait(driver, 30).until(
             EC.presence_of_element_located(
                 (By.ID, "drive-viewer-video-player-object-0")
             )
         )
         try:
-            _DRIVER.switch_to.frame(iframe)
+            driver.switch_to.frame(iframe)
         except NoSuchFrameException:
             if not quiet:
                 print("Frame not found, retrying...")
@@ -64,7 +70,7 @@ def selenium_get_url_confirmation(view_url, quiet):
                 print("Switched to video frame.")
             break
 
-    player = WebDriverWait(_DRIVER, 30).until(
+    player = WebDriverWait(driver, 30).until(
         EC.presence_of_element_located(
             (By.XPATH, "/html/body/div/div/div[1]/video")
         )
