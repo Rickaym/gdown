@@ -1,5 +1,3 @@
-import os.path as osp
-from os import makedirs
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -11,15 +9,19 @@ from urllib.parse import parse_qs
 INITIALIZED = False
 _DRIVER: webdriver.Chrome = None  # type: ignore
 
+
 def init_chrome_driver(get_driver=lambda: webdriver.Chrome()):
     global _DRIVER, INITIALIZED
     INITIALIZED = True
     _DRIVER = get_driver()
 
+
 def selenium_get_url_confirmation(view_url, quiet):
     # Parse the URL into components
-    url_args = parse_qs(view_url.split('?')[-1])
-    view_url = f"https://drive.google.com/file/d/{url_args['id'][0]}/view?usp=sharing"
+    url_args = parse_qs(view_url.split("?")[-1])
+    view_url = (
+        f"https://drive.google.com/file/d/{url_args['id'][0]}/view?usp=sharing"
+    )
     if not quiet:
         print(f"Chromedriver fetching '{view_url}'")
     _DRIVER.get(view_url)
@@ -45,7 +47,9 @@ def selenium_get_url_confirmation(view_url, quiet):
 
     for _ in range(10):
         iframe = WebDriverWait(_DRIVER, 30).until(
-            EC.presence_of_element_located((By.ID, "drive-viewer-video-player-object-0"))
+            EC.presence_of_element_located(
+                (By.ID, "drive-viewer-video-player-object-0")
+            )
         )
         try:
             _DRIVER.switch_to.frame(iframe)
@@ -53,6 +57,7 @@ def selenium_get_url_confirmation(view_url, quiet):
             if not quiet:
                 print("Frame not found, retrying...")
             import time
+
             time.sleep(3)
         else:
             if not quiet:
@@ -60,7 +65,9 @@ def selenium_get_url_confirmation(view_url, quiet):
             break
 
     player = WebDriverWait(_DRIVER, 30).until(
-        EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div[1]/video"))
+        EC.presence_of_element_located(
+            (By.XPATH, "/html/body/div/div/div[1]/video")
+        )
     )
     player.click()
     cookies = {cookie["name"]: cookie["value"] for cookie in cookies}
