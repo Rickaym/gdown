@@ -17,7 +17,7 @@ import tqdm
 from ._indent import indent
 from .exceptions import FileURLRetrievalError
 from .parse_url import parse_url
-from .webdriver_utils import selenium_get_url_confirmation, INITIALIZED
+from .webdriver_utils import selenium_get_url_confirmation, Config
 
 CHUNK_SIZE = 512 * 1024  # 512KB
 home = osp.expanduser("~")
@@ -231,7 +231,7 @@ def download(
             message = ("Failed to retrieve file url:\n\n{}\n\n").format(
                 indent("\n".join(textwrap.wrap(str(e))), prefix="\t")
             )
-            if INITIALIZED:
+            if Config.get_driver is not None:
                 if not quiet:
                     print(
                         message
